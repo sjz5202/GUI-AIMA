@@ -1,5 +1,5 @@
 <!-- # GUI-Actor -->
-## GUI-AIMA: Aligning Intrinsic Multi-Modal Attention with a Context Anchor for GUI Grounding
+## GUI-AIMA: Aligning Intrinsic Multimodal Attention with a Context Anchor for GUI Grounding
 [Shijie Zhou](https://scholar.google.com/citations?user=eEjr-isAAAAJ&hl=en)<sup>*1</sup>&nbsp;
 [Viet Dac Lai](https://laiviet.github.io/)<sup>2</sup>&nbsp;
 [Hao Tan](http://www.cs.unc.edu/~airsplay/)<sup>2</sup>&nbsp;
