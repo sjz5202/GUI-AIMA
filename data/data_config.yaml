@@ -1,0 +1,16 @@
+datasets:
+  - json_path: /mnt/localssd/gui_data/guiact_bbox.json
+    images_folder: /mnt/localssd/gui_data/GUIAct_images/GUIAct/web_imgs/
+    sampling_strategy: "all"
+  - json_path: /mnt/localssd/gui_data/androidcontrol_bbox.json
+    images_folder: /mnt/localssd/gui_data/AndroidControl_images/AndroidControl/tfrecord/images/
+    sampling_strategy: "all"
+  - json_path: /mnt/localssd/gui_data/wave_ui_bbox.json
+    images_folder: /mnt/localssd/gui_data/Wave-UI_images/Wave-UI/images_fixed/
+    sampling_strategy: "all"
+  - json_path: /mnt/localssd/gui_data/uground_bbox_single.json
+    images_folder: /mnt/localssd/gui_data/Uground_images_split/Uground/images/
+    sampling_strategy: "first:60000"
+  - json_path: /mnt/localssd/gui-aima/data/gta/gta_data_wo_web_output_60k.json
+    images_folder: /mnt/localssd/gta_data/image/
+    sampling_strategy: "all"
