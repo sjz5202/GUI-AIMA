@@ -12,7 +12,7 @@
 <sup>*</sup> Majority work done while SZ is at University at Buffalo&nbsp;&nbsp;<sup>†</sup> Leadership  
 
 <h4>
-<a href="">📄 arXiv Paper</a> &nbsp;<a href="https://huggingface.co/smz8599/GUI-AIMA-3B">🤗 GUI-AIMA-3B</a>&nbsp;
+<a href="https://arxiv.org/abs/2511.00810">📄 arXiv Paper</a> &nbsp;<a href="https://huggingface.co/smz8599/GUI-AIMA-3B">🤗 GUI-AIMA-3B</a>&nbsp;
 <a href="https://huggingface.co/smz8599/GUI-AIMA-3B-kl">🤗 GUI-AIMA-3B (soft)</a> &nbsp;
 </h4>
 
@@ -111,4 +111,13 @@ Thanks for their great work!
 
 ## Citation
 ```bibtex
+@misc{zhou2025guiaimaaligningintrinsicmultimodal,
+      title={GUI-AIMA: Aligning Intrinsic Multimodal Attention with a Context Anchor for GUI Grounding}, 
+      author={Shijie Zhou and Viet Dac Lai and Hao Tan and Jihyung Kil and Wanrong Zhu and Changyou Chen and Ruiyi Zhang},
+      year={2025},
+      eprint={2511.00810},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2511.00810}, 
+}
 ```
