@@ -42,8 +42,8 @@ def evaluate(model_name_or_path, model_type, data_fn, image_dir, use_placeholder
             model_name_or_path,
             torch_dtype=torch.bfloat16,
             device_map="cuda:0",
-            attn_implementation=None
-            # attn_implementation="flash_attention_2"
+            # attn_implementation=None
+            attn_implementation="flash_attention_2"
         ).eval()
         if model.config.kl_query_weighting:
             print(f"Model name: {model_name_or_path}, KL-weighting: True")
@@ -280,8 +280,8 @@ if __name__ == "__main__":
     parser.add_argument("--model_name_or_path", type=str, default="smz8599/GUI-AIMA-3B")
     parser.add_argument("--save_path", type=str, default="/mnt/localssd/gui_aima_res/ss_pro/$name/")
     parser.add_argument("--data_path", type=str, default="/mnt/localssd/gui_eval_data/ScreenSpot_pro")
-    parser.add_argument("--resize_to_pixels", type=int, default=2720*1530, help="If set to <0, will not resize the image.")#default=3200*1800
-    parser.add_argument("--max_pixels", type=int, default=5720064, help="If set to <0, will not resize the image.")
+    parser.add_argument("--resize_to_pixels", type=int, default=3200*1800, help="If set to <0, will not resize the image.")#default=3200*1800
+    parser.add_argument("--max_pixels", type=int, default=14777616, help="If set to <0, will not resize the image.")
     parser.add_argument('--no-placeholder', dest='use_placeholder', action='store_false', help='Disable the placeholder')
     parser.add_argument('--topk', type=int, default=3, help='Topk')
     parser.add_argument("--visualization_dir", type=str, default=None, help="If set, will save the visualization images to the directory.")

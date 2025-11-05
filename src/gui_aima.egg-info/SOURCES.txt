@@ -1,0 +1,18 @@
+LICENSE
+README.md
+pyproject.toml
+src/gui_aima/__init__.py
+src/gui_aima/constants.py
+src/gui_aima/dataset.py
+src/gui_aima/inference copy.py
+src/gui_aima/inference.py
+src/gui_aima/inference_ori.py
+src/gui_aima/modeling_qwen25vl.py
+src/gui_aima/modeling_qwen25vl_ori.py
+src/gui_aima/trainer.py
+src/gui_aima/utils.py
+src/gui_aima.egg-info/PKG-INFO
+src/gui_aima.egg-info/SOURCES.txt
+src/gui_aima.egg-info/dependency_links.txt
+src/gui_aima.egg-info/requires.txt
+src/gui_aima.egg-info/top_level.txt

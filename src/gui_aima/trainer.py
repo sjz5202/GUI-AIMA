@@ -78,17 +78,16 @@ class EmptyCacheCallback(TrainerCallback):
         """
         Called after each optimizer step & gradient zeroing,  
         """
+        if self.every_n_steps == -1:
+            return control
+        
         if state.global_step % self.every_n_steps == 0 and torch.cuda.is_available():
             t0 = time.time()
             torch.cuda.empty_cache()
             torch.cuda.synchronize()
             print(f"[empty_cache] step {state.global_step} "
-                  f"耗时 {(time.time()-t0)*1000:.1f} ms")
-        # if self.state.global_step % CHECK_INTERVAL == 0:
-        #     stats = torch.cuda.memory_stats()
-        #     frag = stats["inactive_split_bytes.all.current"] / max(1, stats["reserved_bytes.all.current"])
-        #     if frag > FRAG_THRESHOLD:
-        #         torch.cuda.empty_cache()
+                  f"consuming time {(time.time()-t0)*1000:.1f} ms")
+        return control
 
 class AGUVISTrainer(Trainer):
 

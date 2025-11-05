@@ -7,7 +7,6 @@ from gui_aima.constants import IGNORE_INDEX
 from typing import List, Tuple, Union, Optional
 from gui_aima.trainer import rank0_print
 import re
-from gui_aima.model_utils import calculate_attention_from_qk
 class QwenVLwithVisionHeadOutputWithPast(Qwen2_5_VLCausalLMOutputWithPast):
     """
     Output class for Qwen2_5_VL with pointer head, extending the base output class.
@@ -64,14 +63,10 @@ class GroundingHead_MultiPatch_Attention(nn.Module):
                     else:
                         q_attn = sample_layer_attn[:, topk_query_indices, :][:, :, visual_indices]
                 elif self.config.kl_query_weighting and global_pattern_per_query is not None:
-                    # q_attn = sample_layer_attn[:, query_indices, :][:, :, visual_indices]
-                    q_attn = sample_layer_attn[:, 0:-1, visual_indices]
+                    q_attn = sample_layer_attn[:, query_indices, :][:, :, visual_indices]
                 query_head_attns.append(q_attn)  
             # target_patch_attentions = sample_layer_attn[:, target_indices, visual_indices]
-            # target_patch_attentions = sample_layer_attn[:, target_indices.unsqueeze(1), visual_indices.unsqueeze(0)]
-            target_patch_attentions = sample_layer_attn[:, -1, visual_indices.unsqueeze(0)]
-            # print(sample_layer_attn.shape)
-            # print(sdsd)
+            target_patch_attentions = sample_layer_attn[:, target_indices.unsqueeze(1), visual_indices.unsqueeze(0)]
             # target_patch_attentions = sample_layer_attn[:, target_indices.unsqueeze(1), visual_indices.unsqueeze(0)]
             if target_patch_attentions.shape[1]!=1:
                 target_patch_attentions=torch.mean(target_patch_attentions, dim=1,keepdim=True)
@@ -90,6 +85,7 @@ class GroundingHead_MultiPatch_Attention(nn.Module):
                 head_weights = (head_weights).softmax(dim=-1)
                 head_weights = head_weights.clamp_min(1e-12)               
                 global_pattern_per_query = global_pattern_per_query.clamp_min(1e-12)
+
                 distance =- F.kl_div(
                     (head_weights).log(),                      
                     global_pattern_per_query.expand_as(head_weights),                 
@@ -278,7 +274,7 @@ class Qwen2_5_VLForConditionalGenerationWithPointer(Qwen2_5_VLForConditionalGene
             past_key_values=past_key_values,
             inputs_embeds=inputs_embeds,
             use_cache=use_cache,
-            output_attentions=False,
+            output_attentions=True,
             output_hidden_states=True,
             return_dict=return_dict,
             cache_position=cache_position,
@@ -286,9 +282,9 @@ class Qwen2_5_VLForConditionalGenerationWithPointer(Qwen2_5_VLForConditionalGene
         hidden_states = outputs[0] # shape: (batch_size, seq_len, d_model)
         logits = self.lm_head(hidden_states)
         #[2, 16, 2385, 2385]
-        # self_attentions_batch = outputs.attentions
-        # num_layers = len(self_attentions_batch)
-        # num_heads = self_attentions_batch[0].shape[1]
+        self_attentions_batch = outputs.attentions
+        num_layers = len(self_attentions_batch)
+        num_heads = self_attentions_batch[0].shape[1]
 
         lm_loss = None
         if labels is not None and self.lm_loss_weight > 0:
@@ -329,8 +325,8 @@ class Qwen2_5_VLForConditionalGenerationWithPointer(Qwen2_5_VLForConditionalGene
                 target_indices = torch.nonzero(target_mask, as_tuple=False).squeeze(-1)
                 topk_query_indices = None
                 global_pattern_per_query = None
-                need_grad = self.training and bool(self.config.kl_query_weighting)
-                with torch.set_grad_enabled(need_grad):
+                with torch.no_grad(): 
+                # if kl weighting with torch.enable_grad():  
                     query_start_indice = visual_indices[-1]
                     query_end_mask = (token_ids == self.config.pointer_start_token_id)
                     query_end_mask = torch.nonzero(query_end_mask, as_tuple=False).squeeze(-1)[0]
@@ -341,14 +337,6 @@ class Qwen2_5_VLForConditionalGenerationWithPointer(Qwen2_5_VLForConditionalGene
                     else:
                         query_indices=query_indices
                         # print('all query_indices')
-                    merged_indices = torch.cat([query_indices, target_indices], dim=0)
-                    calculated_attention = calculate_attention_from_qk(
-                        model=self,
-                        all_hidden_states=[outputs.hidden_states],
-                        all_position_ids=position_ids,
-                        query_indices=merged_indices,
-                        all_attention_mask=attention_mask,
-                    )
                     all_layer_hs = torch.stack(outputs.hidden_states[1:], dim=0)
 
                     sample_layer_hs = all_layer_hs[:, i, :, :]            # (n_layer, seq_len, d_model)
@@ -370,14 +358,12 @@ class Qwen2_5_VLForConditionalGenerationWithPointer(Qwen2_5_VLForConditionalGene
                         if self.config.layer_wise_query_weighting:
                             # print('layer_wise', k)
                             topk_layer_vals, topk_layer_indices = torch.topk(attn_per_query, k, dim=-1)
-                            # topk_query_indices=query_indices[topk_layer_indices]
-                            topk_query_indices=topk_layer_indices
+                            topk_query_indices=query_indices[topk_layer_indices]
                         else:
                             # print('not layer_wise',k) 
                             agg_attn = attn_per_query.sum(dim=0)                                   
                             topk_vals, topk_local_idx = torch.topk(agg_attn, k, largest=True)
-                            # topk_query_indices = query_indices[topk_local_idx]
-                            topk_query_indices = topk_local_idx
+                            topk_query_indices = query_indices[topk_local_idx]
                     elif self.config.kl_query_weighting:
                         # global pattern, merge layer                            # (n_layer, n_query)
                         global_pattern_per_query = attn_per_query.sum(dim=0)
@@ -404,13 +390,11 @@ class Qwen2_5_VLForConditionalGenerationWithPointer(Qwen2_5_VLForConditionalGene
                         sample_labels = multi_patch_labels[i]
                 # Calculate loss for multi-patch mode
                 if if_multi_patch:
-                    attn_scores = None
-                    loss_v = None
                     attn_scores, loss_v = self.multi_patch_pointer_head_attention(
                         query_indices,
                         visual_indices,
                         target_indices,
-                        calculated_attention[0],
+                        self_attentions_batch,
                         topk_query_indices,
                         global_pattern_per_query,
                         batch_idx=i,
@@ -440,7 +424,7 @@ class Qwen2_5_VLForConditionalGenerationWithPointer(Qwen2_5_VLForConditionalGene
                 logits=logits,
                 past_key_values=outputs.past_key_values,
                 hidden_states=outputs.hidden_states,
-                attentions=None,
+                attentions=outputs.attentions,
                 rope_deltas=self.rope_deltas,
             )
         else:

@@ -10,14 +10,14 @@ from gui_aima.inference import inference
 
 # load model
 model_name_or_path = "smz8599/GUI-AIMA-3B"
-data_processor = AutoProcessor.from_pretrained(model_name_or_path,max_pixels=5720064)
+data_processor = AutoProcessor.from_pretrained(model_name_or_path,max_pixels=5760000)
 tokenizer = data_processor.tokenizer
 model = Qwen2_5_VLForConditionalGenerationWithPointer.from_pretrained(
     model_name_or_path,
     torch_dtype=torch.bfloat16,
     device_map="cuda:0",
-    attn_implementation=None
-    # attn_implementation="flash_attention_2"
+    # attn_implementation=None
+    attn_implementation="flash_attention_2",
 ).eval()
 
 # prepare example

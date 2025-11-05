@@ -6,7 +6,9 @@ llm_model="Qwen/Qwen2.5-VL-3B-Instruct"
 weighting_method="query_1"
 name="gui_aima_${weighting_method}_3b"
 output_dir="/mnt/localssd/gui_aima_final_ckpt/${name}"
-max_pixels=4014080
+max_pixels=5860400
+# -1: disable empty cache
+empty_cache_interval=-1
 # === Training Command ===
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 torchrun --nproc_per_node=8 --master_port=29500 train.py \
   --deepspeed ./scripts/zero3.json \
@@ -44,6 +46,6 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 torchrun --nproc_per_node=8 --master_port=2
   --unfreeze_visual False \
   --pointer_loss_weight 1.0 \
   --lm_loss_weight 1.0 \
-  --empty_cache_every_n_steps 10 \
+  --empty_cache_every_n_steps ${empty_cache_interval} \
   --number_of_points 1 \
   --weighting ${weighting_method}

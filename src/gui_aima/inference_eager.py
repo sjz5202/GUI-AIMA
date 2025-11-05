@@ -28,106 +28,6 @@ from gui_aima.constants import (
     DEFAULT_POINTER_PAD_TOKEN_5,
     DEFAULT_POINTER_PAD_TOKEN_list
 )
-import math
-
-from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import (
-    apply_multimodal_rotary_pos_emb,
-    repeat_kv,
-)
-
-def calculate_attention_from_qk(
-    model,
-    all_hidden_states,
-    all_position_ids=None,
-    all_attention_mask=None,
-    query_indices=None,
-):
-    qwen_decoder = model.model
-    num_layers = len(qwen_decoder.layers)
-    all_timesteps_attention = []
-
-    for t, hs_per_layer in enumerate(all_hidden_states):
-        bsz, seq_len, _ = hs_per_layer[0].shape
-
-        if query_indices is None:
-            q_idx = [seq_len - 1]
-        else:
-            q_idx = query_indices
-
-        if all_position_ids is not None:
-            if torch.is_tensor(all_position_ids):
-                position_ids = all_position_ids
-            else:
-                position_ids = all_position_ids[t]
-        cos, sin = qwen_decoder.rotary_emb(hs_per_layer[0], position_ids)  # cos/sin: (3, bsz, seq_len, head_dim_part) 展开后会对齐
-
-        # mask
-        if all_attention_mask is not None:
-            if torch.is_tensor(all_attention_mask):
-                attn_mask_2d = all_attention_mask
-            else:
-                attn_mask_2d = all_attention_mask[t]
-            orig_impl = qwen_decoder.config._attn_implementation
-            qwen_decoder.config._attn_implementation = "eager"
-            causal_mask = qwen_decoder._update_causal_mask(
-                attn_mask_2d,
-                hs_per_layer[0],
-                cache_position=torch.arange(seq_len, device=hs_per_layer[0].device),
-                past_key_values=None,
-                output_attentions=True,
-            )
-            qwen_decoder.config._attn_implementation = orig_impl
-        else:
-            causal_mask = None
-
-        timestep_attns = []
-
-        for layer_idx in range(num_layers):
-            layer = qwen_decoder.layers[layer_idx]
-            self_attn = layer.self_attn
-
-            layer_input = hs_per_layer[layer_idx]
-            layer_input = layer.input_layernorm(layer_input)
-            layer_input_q = layer_input[:, q_idx, :]           # (bsz, Q, hidden)
-
-            k_proj = self_attn.k_proj(layer_input)
-            q_proj = self_attn.q_proj(layer_input_q)           # (bsz, Q, num_heads*head_dim)
-            # q = q_proj.view(bsz, len(q_idx), -1, self_attn.head_dim).transpose(1, 2)
-
-            k = k_proj.view(bsz, seq_len, -1, self_attn.head_dim).transpose(1, 2)  # (bsz, kv_heads, N, d)
-            q = q_proj.view(bsz, len(q_idx), -1, self_attn.head_dim).transpose(1, 2)  # (bsz, n_heads, Q, d)
-
-            k = repeat_kv(k, self_attn.num_key_value_groups)  # 先扩 k
-
-            # RoPE
-            k, _ = apply_multimodal_rotary_pos_emb(
-                k, k.clone(), cos, sin, self_attn.rope_scaling["mrope_section"]
-            )
-            cos_q = cos[:, :, q_idx, :]
-            sin_q = sin[:, :, q_idx, :]
-
-            q, _ = apply_multimodal_rotary_pos_emb(
-                q, q.clone(), cos_q, sin_q, self_attn.rope_scaling["mrope_section"])
-
-            #  q: (bsz, n_heads, Q, d), k: (bsz, n_heads, N, d)
-
-            attn_scores = torch.matmul(
-                q, k.transpose(-2, -1)
-            ) / math.sqrt(self_attn.head_dim)  # (bsz, n_heads, Q, N)
-
-            if causal_mask is not None:
-                attn_scores = attn_scores + causal_mask[:, :, q_idx, :].to(attn_scores.dtype)
-
-            attn_weights = F.softmax(attn_scores, dim=-1, dtype=torch.float32).to(q.dtype)
-            p = getattr(self_attn, "attention_dropout", None)
-            if p is None:
-                p = getattr(qwen_decoder.config, "attention_dropout", 0.0)
-            attn_weights = F.dropout(attn_weights, p=p, training=model.training)
-            timestep_attns.append(attn_weights)
-
-        all_timesteps_attention.append(timestep_attns)
-
-    return all_timesteps_attention
 
 class ForceFollowTokensLogitsProcessor(LogitsProcessor):
     """
@@ -430,13 +330,6 @@ def inference(conversation, model, tokenizer, data_processor, logits_processor=N
                             return_tensors="pt"
                             )
     inputs = inputs.to(model.device)
-    with torch.no_grad():
-        position_ids, _ = model.get_rope_index(
-            input_ids=inputs["input_ids"],
-            image_grid_thw=inputs["image_grid_thw"],      # 有图就给图
-            video_grid_thw=None,                # 没视频就None
-            attention_mask=inputs["attention_mask"],
-        )
     
     results = model.generate(**inputs,
                             max_new_tokens=2048 if not use_placeholder else 1,
@@ -446,6 +339,8 @@ def inference(conversation, model, tokenizer, data_processor, logits_processor=N
                             output_attentions=True,
                             temperature=0.1
                             )
+
+
     # decode the generated ids
     input_ids = inputs["input_ids"][0]
     generated_ids = results.sequences[0][len(input_ids):]
@@ -471,14 +366,6 @@ def inference(conversation, model, tokenizer, data_processor, logits_processor=N
         query_indices=query_indices[0:-12]
     else:
         query_indices=query_indices
-    merged_indices = torch.cat([query_indices, target_indices], dim=0)
-    calculated_attention = calculate_attention_from_qk(
-        model=model,
-        all_hidden_states=results.hidden_states,
-        all_position_ids=position_ids,
-        query_indices=merged_indices,
-        all_attention_mask=inputs["attention_mask"],
-    )
     all_layer_hs = torch.stack(results.hidden_states[0][1:], dim=0)
 
     sample_layer_hs = all_layer_hs[:, 0, :, :]            # (n_layer, seq_len, d_model)
@@ -498,17 +385,15 @@ def inference(conversation, model, tokenizer, data_processor, logits_processor=N
         k = model.config.query_topk
         if model.config.layer_wise_query_weighting:
             topk_layer_vals, topk_layer_indices = torch.topk(attn_per_query, k, dim=-1)
-            # topk_query_indices=query_indices[topk_layer_indices]
-            topk_query_indices=topk_layer_indices
+            topk_query_indices=query_indices[topk_layer_indices]
         else:
             agg_attn = attn_per_query.sum(dim=0)                                   
             topk_vals, topk_local_idx = torch.topk(agg_attn, k, largest=True)
-            # topk_query_indices = query_indices[topk_local_idx]
-            topk_query_indices = topk_local_idx
+            topk_query_indices = query_indices[topk_local_idx]
     elif model.config.kl_query_weighting:
         global_pattern_per_query = attn_per_query.sum(dim=0)
         global_pattern_per_query = (global_pattern_per_query).softmax(dim=-1) 
-    attn_scores, _ = model.multi_patch_pointer_head_attention(query_indices, visual_indices, target_indices,calculated_attention[0],topk_query_indices,global_pattern_per_query,batch_idx=0)
+    attn_scores, _ = model.multi_patch_pointer_head_attention(query_indices, visual_indices, target_indices,results.attentions[0],topk_query_indices,global_pattern_per_query,batch_idx=0)
     pred["attn_scores"] = attn_scores.tolist()
 
     _, n_height, n_width = (inputs["image_grid_thw"][0] // model.visual.spatial_merge_size).tolist()

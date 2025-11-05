@@ -1,3 +1,24 @@
+Metadata-Version: 2.4
+Name: gui-aima
+Version: 0.1.0
+License: MIT
+Requires-Python: <3.13,>=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pre-commit>=3.7.1
+Requires-Dist: pip>=24.1.1
+Requires-Dist: Pillow>=10.4.0
+Requires-Dist: liger-kernel==0.5.2
+Requires-Dist: opencv-python-headless>=4.10.0.84
+Requires-Dist: accelerate==1.1.1
+Requires-Dist: qwen-vl-utils==0.0.8
+Requires-Dist: deepspeed==0.16.0
+Requires-Dist: transformers==4.51.3
+Requires-Dist: flash-attn==2.7.3
+Requires-Dist: wandb==0.18.3
+Requires-Dist: datasets>=2.18.0
+Dynamic: license-file
+
 <!-- # GUI-Actor -->
 ## GUI-AIMA: Aligning Intrinsic Multimodal Attention with a Context Anchor for GUI Grounding
 [Shijie Zhou](https://scholar.google.com/citations?user=eEjr-isAAAAJ&hl=en)<sup>*1</sup>&nbsp;
@@ -16,14 +37,6 @@
 <a href="https://huggingface.co/smz8599/GUI-AIMA-3B-kl">🤗 GUI-AIMA-3B (soft)</a> &nbsp;
 </h4>
 
-## Release
-
-- [2025/11/05] 🔥 **GUI-AIMA** now **supports FlashAttention-2**, faster and significantly more memory-efficient than previous Eager attention implementations. While "output_attentions = Ture" is not supported by FlashAttention, we resolve it by mixing FlashAttention and Eager attention implementations. GUI-AIMA now can achieve **49.3%** (1-step), **59.6%** (2-step) on ScreenSpot-pro, and **57.3%** (1-step), **63.5%** (2-step) on OSWorld-G.
-
-## Todos
-- [ ] Release native FlashAttention trained **stronger** GUI-AIMA with larger max_pixels and potential larger size — *in progress* 
-
-## Architecture
 </div>
 <div align="center">
 <img src="assets/images/comparison.png?raw=true" width="85%">

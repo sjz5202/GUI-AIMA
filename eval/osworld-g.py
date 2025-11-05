@@ -45,8 +45,8 @@ def evaluate(model_name_or_path, model_type, data_fn, image_dir, use_placeholder
             model_name_or_path,
             torch_dtype=torch.bfloat16,
             device_map="cuda:0",
-            attn_implementation=None
-            # attn_implementation="flash_attention_2"
+            # attn_implementation=None
+            attn_implementation="flash_attention_2"
         ).eval()
         if model.config.kl_query_weighting:
             print(f"Model name: {model_name_or_path}, KL-weighting: True")

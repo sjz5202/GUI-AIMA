@@ -42,7 +42,8 @@ def evaluate(model_name_or_path, model_type, use_placeholder, topk,max_pixels=57
             model_name_or_path,
             torch_dtype=torch.bfloat16,
             device_map="cuda:0",
-            attn_implementation=None
+            # attn_implementation=None
+            attn_implementation="flash_attention_2"
         ).eval()
         if model.config.kl_query_weighting:
             print(f"Model name: {model_name_or_path}, KL-weighting: True")
@@ -275,7 +276,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_path", type=str, default="/mnt/localssd/gui_aima_res/ssp/results_v2")
     parser.add_argument('--topk', type=int, default=3, help='Topk')
     parser.add_argument('--no-placeholder', dest='use_placeholder', action='store_false', help='Disable the placeholder')
-    parser.add_argument("--max_pixels", type=int, default=5720064, help="If set to <0, will not resize the image.")
+    parser.add_argument("--max_pixels", type=int, default=5760000, help="If set to <0, will not resize the image.")
     parser.add_argument("--visualization_dir", type=str, default=None, help="If set, will save the visualization images to the directory.")
     parser.set_defaults(use_placeholder=True)
 

@@ -238,7 +238,8 @@ def train():
         model = Qwen2_5_VLForConditionalGenerationWithPointer.from_pretrained(
             model_args.model_name_or_path,
             cache_dir=training_args.cache_dir,
-            attn_implementation=None,
+            # attn_implementation=None,
+            attn_implementation="flash_attention_2",
             torch_dtype=(torch.bfloat16 if training_args.bf16 else None),
             low_cpu_mem_usage=False,
         )

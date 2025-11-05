@@ -1,12 +1,13 @@
 # kl weighting_method="query_kl_part"
 weighting_method="query_1"
 JOB_NAME=gui_aima_${weighting_method}_3b
-max_pixels_setting=4014080
+max_pixels_setting=5860400
 data_config_dir="data/data_config.yaml"
 model_type="qwen25vl"
 llm_model="Qwen/Qwen2.5-VL-3B-Instruct"
 output_dir="/mnt/localssd/gui-aima-ckpt/${JOB_NAME}"
-empty_cache_interval=15
+# -1: disable empty cache
+empty_cache_interval=-1
 
 # === Training Command ===
 torchrun --nnodes=${NUM_NODES} \

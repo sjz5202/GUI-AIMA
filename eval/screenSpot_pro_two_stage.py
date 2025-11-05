@@ -41,6 +41,7 @@ def process_image_for_inference(
     data_processor,
     use_placeholder: bool,
     gt_bbox_normalized: tuple[float, float, float, float], # (norm_x1, norm_y1, norm_x2, norm_y2) from the original full image
+    crop_size: int,
 ) -> tuple[tuple[int, int], tuple[int, int, int, int]]:
     """
     Processes an image by cropping a subimage, running an inference model,
@@ -79,7 +80,7 @@ def process_image_for_inference(
     py_center_orig = int(norm_pxy_center[1] * img_height)
 
     # Determine crop coordinates and perform the crop
-    crop_coords = crop_subimage(img_width, img_height, px_center_orig, py_center_orig, 448)
+    crop_coords = crop_subimage(img_width, img_height, px_center_orig, py_center_orig, crop_size)
     start_x, start_y, end_x, end_y = crop_coords
     cropped_image = image.crop((start_x, start_y, end_x, end_y))
     cropped_img_width_ori, cropped_img_height_ori = cropped_image.size
@@ -164,7 +165,8 @@ def evaluate(model_name_or_path, model_type, data_fn, image_dir, use_placeholder
             model_name_or_path,
             torch_dtype=torch.bfloat16,
             device_map="cuda:0",
-            attn_implementation=None
+            # attn_implementation=None
+            attn_implementation="flash_attention_2",
         ).eval()
         if model.config.kl_query_weighting:
             print(f"Model name: {model_name_or_path}, KL-weighting: True")
@@ -202,14 +204,9 @@ def evaluate(model_name_or_path, model_type, data_fn, image_dir, use_placeholder
         ori_image = image.copy()
         
         image_width, image_height = example["img_size"]
-        if (resize_to_pixels is not None) and ((image_width * image_height) != resize_to_pixels):
-            resize_ratio = (resize_to_pixels / (image_width * image_height)) ** 0.5
-            image_width_resized, image_height_resized = int(image_width * resize_ratio), int(image_height * resize_ratio)
-            image = image.resize((image_width_resized, image_height_resized))
-            ele["img_size_resized"] = [image_width_resized, image_height_resized]
-        else:
-            ele["img_size_resized"] = None
-        
+        ele["img_size_resized"] = None
+        portion_size=560**2
+        crop_size= int(((ori_image.width*ori_image.height*portion_size/5760000)**0.5 )/28)*28
         conversation = [
             {
                 "role": "system",
@@ -267,7 +264,7 @@ def evaluate(model_name_or_path, model_type, data_fn, image_dir, use_placeholder
             overlay_img.save(overlay_path)
         if zoom_in:
             # print(f"Zoom-in identification: {zoom_in}")
-            new_point_list, pred, cropped_image, new_gt_bbox = process_image_for_inference(ori_image, topk_points[0], grounding_system_message, example["instruction"], model, tokenizer, data_processor, use_placeholder, gt_bbox)
+            new_point_list, pred, cropped_image, new_gt_bbox = process_image_for_inference(ori_image, topk_points[0], grounding_system_message, example["instruction"], model, tokenizer, data_processor, use_placeholder, gt_bbox,crop_size)
             px, py = new_point_list[0]
             if (x1 <= px <= x2) and (y1 <= py <= y2):
                 ele["hit_top1"] = 1
@@ -431,8 +428,8 @@ if __name__ == "__main__":
     parser.add_argument("--model_name_or_path", type=str, default="smz8599/GUI-AIMA-3B-kl")
     parser.add_argument("--save_path", type=str, default="/mnt/localssd/gui_aima_res/ss_pro/$ckpt_name/two_stage/")
     parser.add_argument("--data_path", type=str, default="/mnt/localssd/gui_eval_data/ScreenSpot_pro")
-    parser.add_argument("--resize_to_pixels", type=int, default=2720*1530, help="If set to <0, will not resize the image.")#default=3200*1800
-    parser.add_argument("--max_pixels", type=int, default=5720064, help="If set to <0, will not resize the image.")
+    parser.add_argument("--resize_to_pixels", type=int, default=3200*1800, help="If set to <0, will not resize the image.")#default=3200*1800 2720*1530
+    parser.add_argument("--max_pixels", type=int, default=5760000, help="If set to <0, will not resize the image.")
     parser.add_argument('--no-placeholder', dest='use_placeholder', action='store_false', help='Disable the placeholder')
     parser.add_argument('--topk', type=int, default=3, help='Topk')
     parser.add_argument("--visualization_dir", type=str, default=None, help="If set, will save the visualization images to the directory.")
