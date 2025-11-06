@@ -327,28 +327,30 @@ class Qwen2_5_VLForConditionalGenerationWithPointer(Qwen2_5_VLForConditionalGene
                 # Identify target tokens (the ones that should attend to visual features).
                 target_mask = torch.isin(token_ids, torch.tensor(self.config.pointer_pad_token_id, device=token_ids.device))
                 target_indices = torch.nonzero(target_mask, as_tuple=False).squeeze(-1)
+
+                query_start_indice = visual_indices[-1]
+                query_end_mask = (token_ids == self.config.pointer_start_token_id)
+                query_end_mask = torch.nonzero(query_end_mask, as_tuple=False).squeeze(-1)[0]
+                query_indices = torch.arange(query_start_indice + 1, query_end_mask, device=token_ids.device)
+                if self.config.part_query_weighting==True:
+                    query_indices=query_indices[0:-12]
+                    # print('part query_indices')
+                else:
+                    query_indices=query_indices
+                    # print('all query_indices')
+                merged_indices = torch.cat([query_indices, target_indices], dim=0)
+                calculated_attention = calculate_attention_from_qk(
+                    model=self,
+                    all_hidden_states=[outputs.hidden_states],
+                    all_position_ids=position_ids,
+                    query_indices=merged_indices,
+                    all_attention_mask=attention_mask,
+                )
+
                 topk_query_indices = None
                 global_pattern_per_query = None
                 need_grad = self.training and bool(self.config.kl_query_weighting)
                 with torch.set_grad_enabled(need_grad):
-                    query_start_indice = visual_indices[-1]
-                    query_end_mask = (token_ids == self.config.pointer_start_token_id)
-                    query_end_mask = torch.nonzero(query_end_mask, as_tuple=False).squeeze(-1)[0]
-                    query_indices = torch.arange(query_start_indice + 1, query_end_mask, device=token_ids.device)
-                    if self.config.part_query_weighting==True:
-                        query_indices=query_indices[0:-12]
-                        # print('part query_indices')
-                    else:
-                        query_indices=query_indices
-                        # print('all query_indices')
-                    merged_indices = torch.cat([query_indices, target_indices], dim=0)
-                    calculated_attention = calculate_attention_from_qk(
-                        model=self,
-                        all_hidden_states=[outputs.hidden_states],
-                        all_position_ids=position_ids,
-                        query_indices=merged_indices,
-                        all_attention_mask=attention_mask,
-                    )
                     all_layer_hs = torch.stack(outputs.hidden_states[1:], dim=0)
 
                     sample_layer_hs = all_layer_hs[:, i, :, :]            # (n_layer, seq_len, d_model)

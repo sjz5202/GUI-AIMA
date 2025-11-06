@@ -177,4 +177,5 @@ dependencies:
       - wandb==0.18.3
       - xxhash==3.5.0
       - yarl==1.20.1
+      - matplotlib
 prefix: /home/anaconda3/envs/gui_aima
