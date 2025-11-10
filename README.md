@@ -20,8 +20,10 @@
 
 - [2025/11/05] 🔥 **GUI-AIMA** now **supports FlashAttention-2**, faster and significantly more memory-efficient than previous Eager attention implementations. While "output_attentions = Ture" is not supported by FlashAttention, we resolve it by mixing FlashAttention and Eager attention implementations. GUI-AIMA now can achieve **49.3%** (1-step), **59.6%** (2-step) on ScreenSpot-pro, and **57.3%** (1-step), **63.5%** (2-step) on OSWorld-G.
 
+- [2025/11/10] 🔥 Update **smz8599/GUI-AIMA-3B**. We can now achieve **58.3%** (1-step), **63.8%** (2-step) on OSWorld-G and **91.5%** on ScreenSpot-v2.
+
 ## Todos
-- [ ] Release native FlashAttention trained **stronger** GUI-AIMA with larger max_pixels and potential larger size — *in progress* 
+- [x] Release native FlashAttention trained **stronger** GUI-AIMA with larger max_pixels and potential larger size — *Nov 10* 
 
 ## Architecture
 </div>

@@ -81,7 +81,7 @@ def process_image_for_inference(
     start_x, start_y, end_x, end_y = crop_coords
     cropped_image = image.crop((start_x, start_y, end_x, end_y))
     cropped_img_width_ori, cropped_img_height_ori = cropped_image.size
-    cropped_image = cropped_image.resize((cropped_img_width_ori*2, cropped_img_height_ori*2), Image.BICUBIC)
+    cropped_image = cropped_image.resize((cropped_img_width_ori*4, cropped_img_height_ori*4), Image.BICUBIC)
 
     # Prepare the conversation for inference
     conversation = [
@@ -117,8 +117,8 @@ def process_image_for_inference(
     for (norm_px_predicted_cropped, norm_py_predicted_cropped) in topk_points:
         px_in_cropped_image = int(norm_px_predicted_cropped * cropped_img_width)
         py_in_cropped_image = int(norm_py_predicted_cropped * cropped_img_height)
-        px_in_original_image = px_in_cropped_image/2 +start_x
-        py_in_original_image = py_in_cropped_image/2 +start_y
+        px_in_original_image = px_in_cropped_image/4 +start_x
+        py_in_original_image = py_in_cropped_image/4 +start_y
         point_tuple = (px_in_original_image/img_width, py_in_original_image/img_height)
         point_tuple_list.append(point_tuple)
 
