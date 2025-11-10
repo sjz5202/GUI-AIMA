@@ -52,7 +52,7 @@ Figure 2. **GUI-AIMA** proposes an effective multi-head weighting approach by me
 ## Main Results
 There are two variants of GUI-AIMA: [GUI-AIMA-3B](https://huggingface.co/smz8599/GUI-AIMA-3B) and [GUI-AIMA-3B(soft)](https://huggingface.co/smz8599/GUI-AIMA-3B-kl) with slight differences of multihead weighting.
 
-1-step inference of GUI-AIMA achieves **49.3%** and **57.3%** on ScreenSpot-pro and OSWorld-G. With 2-step zoom-in inference, it can achieve **59.6%** and **63.5%** on ScreenSpot-pro and OSWorld-G.
+1-step inference of GUI-AIMA achieves **49.8%**, **58.3%**, **91.5%** on ScreenSpot-pro, OSWorld-G and ScreenSpot-v2. With 2-step zoom-in inference, it can achieve **59.6%** and **63.8%** on ScreenSpot-pro and OSWorld-G.
 
 We trained GUI-AIMA for one-step center points predictions. However, **GUI-AIMA can be inferenced in the 2-step fashion without further fine-tuning**: (step 1) 1st inferece to determine rough grounding areas; (step 2) crop and zoom-in the rough grounding areas for 2nd preciser grounding inference.  The 2-step inference is very helpful for GUI grounding on high-resolution screenshots, such as samples in ScreenSpot-pro and OSWorld-G.
 
