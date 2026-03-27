@@ -13,17 +13,16 @@
 
 <h4>
 <a href="https://arxiv.org/abs/2511.00810">📄 arXiv Paper</a> &nbsp;<a href="https://huggingface.co/smz8599/GUI-AIMA-3B">🤗 GUI-AIMA-3B</a>&nbsp;
-<a href="https://huggingface.co/smz8599/GUI-AIMA-3B-kl">🤗 GUI-AIMA-3B (soft)</a> &nbsp;
+<a href="https://huggingface.co/smz8599/GUI-AIMA-lite-3B">🤗 GUI-AIMA-lite-3B</a> &nbsp;
 </h4>
 
 ## Release
 
-- [2025/11/05] 🔥 **GUI-AIMA** now **supports FlashAttention-2**, faster and significantly more memory-efficient than previous Eager attention implementations. While "output_attentions = Ture" is not supported by FlashAttention, we resolve it by mixing FlashAttention and Eager attention implementations. GUI-AIMA now can achieve **49.3%** (1-step), **59.6%** (2-step) on ScreenSpot-pro, and **57.3%** (1-step), **63.5%** (2-step) on OSWorld-G.
+- [2025/11/05] 🔥 **GUI-AIMA-lite** now **supports FlashAttention-2**, faster and significantly more memory-efficient than previous Eager attention implementations. While "output_attentions = Ture" is not supported by FlashAttention, we resolve it by mixing FlashAttention and Eager attention implementations. GUI-AIMA-lite-3B now can achieve **49.3%** (1-step), **59.6%** (2-step) on ScreenSpot-pro, and **57.3%** (1-step), **63.5%** (2-step) on OSWorld-G.
 
-- [2025/11/10] 🔥 Update **smz8599/GUI-AIMA-3B**. We can now achieve **58.3%** (1-step), **63.8%** (2-step) on OSWorld-G and **91.5%** on ScreenSpot-v2.
+- [2025/11/10] 🔥 Update **smz8599/GUI-AIMA-lite-3B**. We can now achieve **58.3%** (1-step), **63.8%** (2-step) on OSWorld-G and **91.5%** on ScreenSpot-v2.
 
-## Todos
-- [x] Release native FlashAttention trained **stronger** GUI-AIMA with larger max_pixels and potential larger size — *Nov 10* 
+- [2026/03/27] 🔥 Update **smz8599/GUI-AIMA-3B** with stronger desktop grounding capacity. it achieves **61.5%** and **68.1%** on ScreenSpot-Pro and OSWorld-G.
 
 ## Architecture
 </div>
@@ -50,24 +49,11 @@ Figure 2. **GUI-AIMA** proposes an effective multi-head weighting approach by me
 - [Citation](#citation)
 
 ## Main Results
-There are two variants of GUI-AIMA: [GUI-AIMA-3B](https://huggingface.co/smz8599/GUI-AIMA-3B) and [GUI-AIMA-3B(soft)](https://huggingface.co/smz8599/GUI-AIMA-3B-kl) with slight differences of multihead weighting.
+There are two variants of GUI-AIMA: [GUI-AIMA-3B](https://huggingface.co/smz8599/GUI-AIMA-3B) and [GUI-AIMA-lite-3B](https://huggingface.co/smz8599/GUI-AIMA-lite-3B). Based on GUI-AIMA-lite-3B, GUI-AIMA-3B is extra trained with 250k data from [GroundCUA](https://huggingface.co/datasets/ServiceNow/GroundCUA).
 
-1-step inference of GUI-AIMA achieves **49.8%**, **58.3%**, **91.5%** on ScreenSpot-pro, OSWorld-G and ScreenSpot-v2. With 2-step zoom-in inference, it can achieve **59.6%** and **63.8%** on ScreenSpot-pro and OSWorld-G.
+1-step inference of GUI-AIMA achieves **53.8%**, **62.8%**, **60.0%**, **79.1%**, **92.1%** on ScreenSpot-pro, OSWorld-G, UI-Vision, MMBench-GUI-L2 and ScreenSpot-v2. With 2-step zoom-in inference, it can achieve **61.5%** and **68.1%** on ScreenSpot-pro and OSWorld-G.
 
 We trained GUI-AIMA for one-step center points predictions. However, **GUI-AIMA can be inferenced in the 2-step fashion without further fine-tuning**: (step 1) 1st inferece to determine rough grounding areas; (step 2) crop and zoom-in the rough grounding areas for 2nd preciser grounding inference.  The 2-step inference is very helpful for GUI grounding on high-resolution screenshots, such as samples in ScreenSpot-pro and OSWorld-G.
-
-</div>
-<div align="left">
-<img src="assets/images/ss_pro.png?raw=true" width="100%">
-</div>
-
-<div align="left">
-<img src="assets/images/osworld-g.png?raw=true" width="80%">
-</div>
-
-<div align="left">
-<img src="assets/images/ss_v2.png?raw=true" width="85%">
-</div>
 
 ## Installation
 1. Environment:
@@ -80,7 +66,7 @@ pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https
 pip install -e .
 ```
 ## Model Training
-### Data preparation
+### Data preparation (GUI-AIMA-lite)
 1. Download the GUI-Actor data from [here](https://huggingface.co/datasets/cckevinn/GUI-Actor-Data).
 2. Download the UGround single-round dialogue json data from [here](https://huggingface.co/datasets/smz8599/UGround-single).
 2. Download the GTA1 data without the web part from [here](https://huggingface.co/datasets/smz8599/GTA_data_no_web).
@@ -96,11 +82,11 @@ bash scripts/sft_multi_node.sh
 ```
 
 ## Evaluation on GUI Grounding Benchmarks
-We provide evaluation scripts on ScreenSpot-Pro, ScreenSpot-v2 and OSWorld-G under the `eval/` folder: `eval_ss_pro.sh`, `eval_ss_v2.sh`, `eval_osworld_g.sh`. 
+We provide evaluation scripts on ScreenSpot-Pro, OSWorld-G, UI-Vision, MMBench-GUI-L2 and ScreenSpot-v2 under the `eval/` folder: `eval_ss_pro.sh`, `eval_osworld_g.sh`, `eval_ui_vision.sh`, `eval_mmbench_l2.sh`, `eval_ss_v2.sh`. 
 
 For ScreenSpot-Pro and OSWorld-G, we provide 2-step inference in `eval_ss_pro.sh` and `eval_osworld_g.sh`, which determines the focusing area at the 1st step and zoom-in the focusing area for grounding at the 2nd step without extra model training.
 
-For ScreenSpot-Pro and OSWorld-G, you need to download the data from [here](https://huggingface.co/datasets/likaixin/ScreenSpot-Pro) and [here](https://github.com/xlang-ai/OSWorld-G), then adjust the data path in `eval_ss_pro.sh` and `eval_osworld_g.sh`.
+Evaluation datasets are available from [ScreenSpot-Pro](https://huggingface.co/datasets/likaixin/ScreenSpot-Pro), [OSWorld-G](https://github.com/xlang-ai/OSWorld-G), [UI-Vision](https://huggingface.co/datasets/ServiceNow/ui-vision), [MMBench-GUI-L2](https://huggingface.co/datasets/OpenGVLab/MMBench-GUI) and [ScreenSpot-v2](https://huggingface.co/datasets/HongxinLi/ScreenSpot_v2). The data path in each evaluation script needs to be adjusted.
 
 Single sample example usage is available in `eval/example_inference.py`.
 
@@ -111,6 +97,7 @@ GUI-AIMA is built upon the following projects.
 - [GUI-Actor](https://github.com/microsoft/GUI-Actor)
 - [TAG](https://github.com/HeimingX/TAG.git)
 - [GTA1](https://github.com/Yan98/GTA1)
+- [GroundCUA](https://github.com/ServiceNow/GroundCUA)
 - [Transformers](https://github.com/huggingface/transformers)
 - [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL)
 - [AGUVIS](https://github.com/xlang-ai/aguvis)

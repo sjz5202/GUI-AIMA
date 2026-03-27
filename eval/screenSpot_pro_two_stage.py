@@ -17,7 +17,7 @@ from pathlib import Path
 import math
 from PIL import ImageDraw, ImageFont # Make sure ImageFont is imported
 IMAGE_PATCH_SIZE =14
-
+zoom_in_scale=3.0
 def normalize_bbox(bbox_x1y1x2y2, img_width, img_height):
     # if bbox_x1y1x2y2 is not normalized to [0, 1], normalize it
     x1, y1, x2, y2 = bbox_x1y1x2y2
@@ -84,7 +84,7 @@ def process_image_for_inference(
     start_x, start_y, end_x, end_y = crop_coords
     cropped_image = image.crop((start_x, start_y, end_x, end_y))
     cropped_img_width_ori, cropped_img_height_ori = cropped_image.size
-    cropped_image = cropped_image.resize((cropped_img_width_ori*2, cropped_img_height_ori*2), Image.BICUBIC)
+    cropped_image = cropped_image.resize((int(cropped_img_width_ori*zoom_in_scale), int(cropped_img_height_ori*zoom_in_scale)), Image.BICUBIC)
 
     # Prepare the conversation for inference
     conversation = [
@@ -120,8 +120,8 @@ def process_image_for_inference(
     for (norm_px_predicted_cropped, norm_py_predicted_cropped) in topk_points:
         px_in_cropped_image = int(norm_px_predicted_cropped * cropped_img_width)
         py_in_cropped_image = int(norm_py_predicted_cropped * cropped_img_height)
-        px_in_original_image = px_in_cropped_image/2 +start_x
-        py_in_original_image = py_in_cropped_image/2 +start_y
+        px_in_original_image = px_in_cropped_image/zoom_in_scale +start_x
+        py_in_original_image = py_in_cropped_image/zoom_in_scale +start_y
         point_tuple = (px_in_original_image/img_width, py_in_original_image/img_height)
         point_tuple_list.append(point_tuple)
     
@@ -205,7 +205,7 @@ def evaluate(model_name_or_path, model_type, data_fn, image_dir, use_placeholder
         
         image_width, image_height = example["img_size"]
         ele["img_size_resized"] = None
-        portion_size=560**2
+        portion_size=616**2
         crop_size= int(((ori_image.width*ori_image.height*portion_size/5760000)**0.5 )/28)*28
         conversation = [
             {
