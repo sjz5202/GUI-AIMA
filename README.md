@@ -18,28 +18,13 @@
 
 ## Release
 
-- [2025/11/05] 🔥 **GUI-AIMA-lite** now **supports FlashAttention-2**, faster and significantly more memory-efficient than previous Eager attention implementations. While "output_attentions = Ture" is not supported by FlashAttention, we resolve it by mixing FlashAttention and Eager attention implementations. GUI-AIMA-lite-3B now can achieve **49.3%** (1-step), **59.6%** (2-step) on ScreenSpot-pro, and **57.3%** (1-step), **63.5%** (2-step) on OSWorld-G.
+- [2025/11/05] 🔥 **GUI-AIMA-lite** now **supports FlashAttention-2**, faster and significantly more memory-efficient than previous Eager attention implementations. While "output_attentions = Ture" is not supported by FlashAttention, we resolve it by mixing FlashAttention and Eager attention implementations. 
 
-- [2025/11/10] 🔥 Update **smz8599/GUI-AIMA-lite-3B**. We can now achieve **58.3%** (1-step), **63.8%** (2-step) on OSWorld-G and **91.5%** on ScreenSpot-v2.
-
-- [2026/03/27] 🔥 Update **smz8599/GUI-AIMA-3B** with stronger desktop grounding capacity. it achieves **61.5%** and **68.1%** on ScreenSpot-Pro and OSWorld-G.
-
-## Architecture
-</div>
-<div align="center">
-<img src="assets/images/comparison.png?raw=true" width="85%">
-</div>
-
-Figure 1. **GUI-AIMA** utilize the inherent attention of MLLMs for patch-wise GUI grounding. It simplifies the vanilla attention grounding requiring proper aggregation between all query tokens' grounding vectors by adding a learnable ANCHOR token as the context anchor of query. The multi-head aggregation on attention vectors between ANCHOR and visual tokens is adequate for grounding.
-
-<div align="center">
-<img src="assets/images/main_fig.png?raw=true" width="85%">
-</div>
-
-Figure 2. **GUI-AIMA** proposes an effective multi-head weighting approach by measuring the uniformity between global query-visual pattern and head-wise query-visual pattern. 
+- [2026/03/27] 🔥 Update **smz8599/GUI-AIMA-3B** with stronger desktop grounding capacity. It achieves **61.5%** and **68.1%** on ScreenSpot-Pro and OSWorld-G in 2-step manner.
 
 ## Table of Contents
 - [Main Results](#main-results)
+- [Architecture](#architecture)
 - [Installation](#installation)
 - [Model Training](#model-training)
   - [Data preparation](#data-preparation)
@@ -54,6 +39,20 @@ There are two variants of GUI-AIMA: [GUI-AIMA-3B](https://huggingface.co/smz8599
 1-step inference of GUI-AIMA achieves **53.8%**, **62.8%**, **60.0%**, **79.1%**, **92.1%** on ScreenSpot-pro, OSWorld-G, UI-Vision, MMBench-GUI-L2 and ScreenSpot-v2. With 2-step zoom-in inference, it can achieve **61.5%** and **68.1%** on ScreenSpot-pro and OSWorld-G.
 
 We trained GUI-AIMA for one-step center points predictions. However, **GUI-AIMA can be inferenced in the 2-step fashion without further fine-tuning**: (step 1) 1st inferece to determine rough grounding areas; (step 2) crop and zoom-in the rough grounding areas for 2nd preciser grounding inference.  The 2-step inference is very helpful for GUI grounding on high-resolution screenshots, such as samples in ScreenSpot-pro and OSWorld-G.
+
+## Architecture
+</div>
+<div align="center">
+<img src="assets/images/comparison.png?raw=true" width="85%">
+</div>
+
+Figure 1. **GUI-AIMA** utilize the inherent attention of MLLMs for patch-wise GUI grounding. It simplifies the vanilla attention grounding requiring proper aggregation between all query tokens' grounding vectors by adding a learnable ANCHOR token as the context anchor of query. The multi-head aggregation on attention vectors between ANCHOR and visual tokens is adequate for grounding.
+
+<div align="center">
+<img src="assets/images/main_fig.png?raw=true" width="85%">
+</div>
+
+Figure 2. **GUI-AIMA** proposes an effective multi-head weighting approach by measuring the uniformity between global query-visual pattern and head-wise query-visual pattern. 
 
 ## Installation
 1. Environment:
