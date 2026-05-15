@@ -107,13 +107,10 @@ Thanks for their great work!
 
 ## Citation
 ```bibtex
-@misc{zhou2025guiaimaaligningintrinsicmultimodal,
-      title={GUI-AIMA: Aligning Intrinsic Multimodal Attention with a Context Anchor for GUI Grounding}, 
-      author={Shijie Zhou and Viet Dac Lai and Hao Tan and Jihyung Kil and Wanrong Zhu and Changyou Chen and Ruiyi Zhang},
-      year={2025},
-      eprint={2511.00810},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2511.00810}, 
+@article{zhou2025gui,
+  title={Gui-aima: Aligning intrinsic multimodal attention with a context anchor for gui grounding},
+  author={Zhou, Shijie and Lai, Viet Dac and Tan, Hao and Kil, Jihyung and Zhu, Wanrong and Chen, Changyou and Zhang, Ruiyi},
+  journal={arXiv preprint arXiv:2511.00810},
+  year={2025}
 }
 ```
