@@ -65,10 +65,13 @@ pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https
 pip install -e .
 ```
 ## Model Training
-### Data preparation (GUI-AIMA-lite)
+### Data preparation 
+#### For GUI-AIMA-lite
 1. Download the GUI-Actor data from [here](https://huggingface.co/datasets/cckevinn/GUI-Actor-Data).
 2. Download the UGround single-round dialogue json data from [here](https://huggingface.co/datasets/smz8599/UGround-single).
 2. Download the GTA1 data without the web part from [here](https://huggingface.co/datasets/smz8599/GTA_data_no_web).
+
+OR smz8599/gui-aima-data for your convenience.
 
 ### Training
 1. Single-node training:
