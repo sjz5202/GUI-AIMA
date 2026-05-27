@@ -71,7 +71,7 @@ pip install -e .
 2. Download the UGround single-round dialogue json data from [here](https://huggingface.co/datasets/smz8599/UGround-single).
 2. Download the GTA1 data without the web part from [here](https://huggingface.co/datasets/smz8599/GTA_data_no_web).
 
-OR smz8599/gui-aima-data for your convenience.
+OR [smz8599/gui-aima-data](https://huggingface.co/datasets/smz8599/gui-aima-data) for your convenience.
 
 ### Training
 1. Single-node training:
